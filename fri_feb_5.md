@@ -5,6 +5,12 @@
 2. rust enum monad
 
    - monad: map, flatmap 를 구현한것
+   - 확인해본 결과, rust의 Option은 map 뿐만 아니라, flatten이라는 메서드를 구현하고 있다.
+   - flatten 메서드는 `Option<Option<T>>` 타입을 `Option<T>` 타입으로 풀어준다.
+   - 다만, Iterator에 구현된 flat_map이건 flatten이건 Option 타입에 구현된 flatten이건, One-level depth에 대해서만 풀어준다.
+   - 재귀적으로 중첩된 모든 것을 풀어헤치는 것이 아니다.
+   - 이러한 구현은 자바스크립트 배열 메서드 flatMap 도 동일하게 One-level depth를 풀어헤치는 것으로 확인했다.
+   - 다만 하나를 푸는 메서드를 통해 모든 depth를 푸는 메서드는 비교적 쉽게 구현해볼 수 있을 듯.
 
 3. derive vs trait
 
