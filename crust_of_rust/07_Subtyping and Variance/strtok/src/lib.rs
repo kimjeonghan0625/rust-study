@@ -59,8 +59,10 @@ mod tests {
             fn main(){
                 let s = String::new();
                 let x: &'static str = "hello";
-                let mut y = &*s;
-                y = x;
+                let mut y/*  y: &'a */ = &*s;
+                y = x; // 'static -> 'a
+
+                // static is subtype of any lifetime of 'a
             }
         */
 
