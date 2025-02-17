@@ -80,3 +80,18 @@
 
   z = x;  // 'y mut bool = 'static mut bool
   ```
+
+## NonNull
+
+- \*mut T, but non-zero, covariant
+  - because of this NonNull<T> can be used at making Covariant type
+    - [Explane](https://doc.rust-lang.org/std/ptr/struct.NonNull.html)
+    - [NonNull Doc](https://doc.rust-lang.org/std/ptr/struct.NonNull.html)
+
+```rust
+pub struct NonNull<T: ?Sized> {
+    pointer: *const T,
+}
+
+NonNull::new(ptr: \*mut T) -> NonNull<T>
+```
