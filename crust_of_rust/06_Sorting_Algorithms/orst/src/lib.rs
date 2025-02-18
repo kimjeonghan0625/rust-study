@@ -4,8 +4,10 @@ pub trait Sorter {
         T: Ord;
 }
 
-mod bubblesort;
-mod insertionsort;
+pub mod bubblesort;
+pub mod insertionsort;
+pub mod quicksort;
+pub mod selectionsort;
 
 #[cfg(test)]
 mod tests {
