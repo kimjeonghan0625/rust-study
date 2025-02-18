@@ -2,7 +2,7 @@ use super::Sorter;
 
 pub struct QuickSort;
 
-fn quicksort<T: Ord>(slice: &mut [T]) {
+fn quick_sort_1<T: Ord>(slice: &mut [T]) {
     match slice.len() {
         0 | 1 => return,
         2 => {
@@ -50,8 +50,41 @@ fn quicksort<T: Ord>(slice: &mut [T]) {
     // split_at_mut(mid: usize) -> (&mut [..mid), &mut [mid..])
     let (left, right) = slice.split_at_mut(left - 1);
     assert!(left.last() <= right.first());
-    quicksort(left);
-    quicksort(&mut right[1..]);
+    quick_sort_1(left);
+    quick_sort_1(&mut right[1..]);
+}
+
+fn pivot<T: Ord>(slice: &mut [T], pivot_index: usize, end_index: usize) -> usize {
+    let mut swap_index = pivot_index;
+    for i in pivot_index..=end_index {
+        if slice[i] < slice[pivot_index] {
+            swap_index += 1;
+            slice.swap(i, swap_index);
+        }
+    }
+    slice.swap(pivot_index, swap_index);
+    swap_index
+}
+
+fn quick_sort_2<T: Ord>(slice: &mut [T]) {
+    match slice.len() {
+        0 | 1 => return,
+        2 => {
+            if slice[0] > slice[1] {
+                slice.swap(0, 1);
+            }
+            return;
+        }
+        _ => {}
+    }
+    let left = 0;
+    let right = slice.len() - 1;
+    if left < right {
+        let pivot_index = pivot(slice, left, right);
+        let (l, r) = slice.split_at_mut(pivot_index);
+        quick_sort_2(l);
+        quick_sort_2(&mut r[1..]);
+    }
 }
 
 impl Sorter for QuickSort {
@@ -59,8 +92,23 @@ impl Sorter for QuickSort {
     where
         T: Ord,
     {
-        quicksort(slice);
+        quick_sort_2(slice);
     }
+}
+
+#[test]
+fn quick_sort_test() {
+    let mut s = [4, 6, 1, 7, 3, 2, 5];
+    quick_sort_2(&mut s);
+    println!("{s:?}");
+    assert_eq!(s, [1, 2, 3, 4, 5, 6, 7])
+}
+
+#[test]
+fn pivot_test() {
+    let mut s = [4, 6, 1, 7, 3, 2, 5];
+    assert_eq!(pivot(&mut s, 0, 6), 3);
+    println!("{s:?}");
 }
 
 #[test]
