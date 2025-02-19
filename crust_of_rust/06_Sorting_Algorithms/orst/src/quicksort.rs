@@ -1,6 +1,7 @@
 use super::Sorter;
 
-pub struct QuickSort;
+pub struct QuickSort1;
+pub struct QuickSort2;
 
 fn quick_sort_1<T: Ord>(slice: &mut [T]) {
     match slice.len() {
@@ -87,7 +88,16 @@ fn quick_sort_2<T: Ord>(slice: &mut [T]) {
     }
 }
 
-impl Sorter for QuickSort {
+impl Sorter for QuickSort1 {
+    fn sort<T>(&self, slice: &mut [T])
+    where
+        T: Ord,
+    {
+        quick_sort_1(slice);
+    }
+}
+
+impl Sorter for QuickSort2 {
     fn sort<T>(&self, slice: &mut [T])
     where
         T: Ord,
@@ -127,69 +137,69 @@ fn it_works() {
     //        p
     // [3 2 1 4 5]
     let mut things = vec![4, 2, 5, 3, 1];
-    QuickSort.sort(&mut things);
+    QuickSort1.sort(&mut things);
     assert_eq!(things, &[1, 2, 3, 4, 5]);
 }
 
 #[test]
 fn test_sorted_list() {
     let mut things = vec![1, 2, 3, 4, 5];
-    QuickSort.sort(&mut things);
+    QuickSort1.sort(&mut things);
     assert_eq!(things, &[1, 2, 3, 4, 5]);
 }
 
 #[test]
 fn test_reverse_sorted_list() {
     let mut things = vec![5, 4, 3, 2, 1];
-    QuickSort.sort(&mut things);
+    QuickSort1.sort(&mut things);
     assert_eq!(things, &[1, 2, 3, 4, 5]);
 }
 
 #[test]
 fn test_single_element() {
     let mut things = vec![42];
-    QuickSort.sort(&mut things);
+    QuickSort1.sort(&mut things);
     assert_eq!(things, &[42]);
 }
 
 #[test]
 fn test_two_elements() {
     let mut things = vec![2, 1];
-    QuickSort.sort(&mut things);
+    QuickSort1.sort(&mut things);
     assert_eq!(things, &[1, 2]);
 }
 
 #[test]
 fn test_duplicates() {
     let mut things = vec![4, 2, 5, 3, 1, 2, 4, 3];
-    QuickSort.sort(&mut things);
+    QuickSort1.sort(&mut things);
     assert_eq!(things, &[1, 2, 2, 3, 3, 4, 4, 5]);
 }
 
 #[test]
 fn test_large_range() {
     let mut things: Vec<i32> = (1..=1000).rev().collect();
-    QuickSort.sort(&mut things);
+    QuickSort1.sort(&mut things);
     assert_eq!(things, (1..=1000).collect::<Vec<i32>>().as_slice());
 }
 
 #[test]
 fn test_all_same_elements() {
     let mut things = vec![7, 7, 7, 7, 7];
-    QuickSort.sort(&mut things);
+    QuickSort1.sort(&mut things);
     assert_eq!(things, &[7, 7, 7, 7, 7]);
 }
 
 #[test]
 fn test_negative_numbers() {
     let mut things = vec![-5, -1, -3, -2, -4];
-    QuickSort.sort(&mut things);
+    QuickSort1.sort(&mut things);
     assert_eq!(things, &[-5, -4, -3, -2, -1]);
 }
 
 #[test]
 fn test_mixed_numbers() {
     let mut things = vec![3, -1, 4, -2, 0];
-    QuickSort.sort(&mut things);
+    QuickSort1.sort(&mut things);
     assert_eq!(things, &[-2, -1, 0, 3, 4]);
 }
