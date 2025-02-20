@@ -5,14 +5,24 @@
 */
 #![feature(dropck_eyepatch)]
 
+use std::marker::PhantomData;
+
 pub struct Boks<T> {
     p: *mut T,
+    _t: PhantomData<T>,
 }
 
 /*
    T에 대해서 사용하지 않겠다고 했지만, drop을 할건지에 대해서는 설정한적 없음
    컴파일러는 T에 대한 제네릭이 Drop을 impl하면 T를 사용하는 것으로 간주
         - '사용'은 'drop' 보다는 빡빡한 제약이어서 사용만 강제하는 방식으로 컴파일러가 동작
+
+    tell compiler not access T, but drop T
+        -> PhantomData
+
+    borrow check에서 drop을 구현하는 struct를 볼 때 2가지를 물음
+    1. access type parameter(may_dangle)
+    2. drop type parameter(phantomdata)
 */
 unsafe impl<#[may_dangle] T> Drop for Boks<T> {
     fn drop(&mut self) {
@@ -24,6 +34,7 @@ impl<T> Boks<T> {
     pub fn ny(t: T) -> Self {
         Boks {
             p: Box::into_raw(Box::new(t)),
+            _t: PhantomData,
         }
     }
 }
@@ -80,7 +91,7 @@ fn main() {
     let mut z = 42;
 
     let b = Boks::ny(Oisann(&mut z));
-    let b = Box::new(Oisann(&mut z));
+    // let b = Box::new(Oisann(&mut z));
     println!("{:?}", z);
     /*
        이 코드는 컴파일이 되지만, 되면 안됨
