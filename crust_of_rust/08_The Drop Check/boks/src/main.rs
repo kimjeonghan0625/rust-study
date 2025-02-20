@@ -1,17 +1,23 @@
+/*
+    permanently unstable feature(stable 에서 안돌아감)
+        - rustup override set nightly
+    drop check의 메커니즘을 파악 중
+*/
+#![feature(dropck_eyepatch)]
+
 pub struct Boks<T> {
     p: *mut T,
 }
 
-impl<T> Drop for Boks<T> {
-    // without drop, Boks will memory leak
+/*
+   may_dangle: coder promise compiler to not access T
+
+   Boks의 어떤 trait는 unsafe하고 나머지는 safe 라기 보다는
+   여기서 unsafe는 may_dangle에 연관된 unsafe
+*/
+unsafe impl<#[may_dangle] T> Drop for Boks<T> {
     fn drop(&mut self) {
-        // let _: u8 = unsafe { std::ptr::read(self.p as *const u8) };
-        /*
-            nothing stop code above
-            compiler need to know whether to consider use anything inside type
-        */
         unsafe { Box::from_raw(self.p) };
-        // std::ptr::drop_in_place(self.p); // drop T, but not free Box
     }
 }
 
@@ -56,11 +62,9 @@ fn main() {
     // Boks not work, Box work
     let b = Boks::ny(&mut y);
     // let b = Box::new(&mut y);
-    /*
-        b가 &mut을 쓰고있지만, 코드에서 b를 사용하는 곳이 없어서
-        빠른 drop이 일어나, println이 되야 될것 같다
-
-        근데 drop을 생각해보면 &mut을 받기 때문에 &mut y를 사용한다
-    */
     println!("{:?}", y);
+    /*
+       drop에서 T에 접근하지 않기 때문에, &mut의 lifetime을 줄일 수 있고
+       그러면 &y에 대한 사용이 가능해진다
+    */
 }
