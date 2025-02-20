@@ -10,10 +10,9 @@ pub struct Boks<T> {
 }
 
 /*
-   may_dangle: coder promise compiler to not access T
-
-   Boks의 어떤 trait는 unsafe하고 나머지는 safe 라기 보다는
-   여기서 unsafe는 may_dangle에 연관된 unsafe
+   T에 대해서 사용하지 않겠다고 했지만, drop을 할건지에 대해서는 설정한적 없음
+   컴파일러는 T에 대한 제네릭이 Drop을 impl하면 T를 사용하는 것으로 간주
+        - '사용'은 'drop' 보다는 빡빡한 제약이어서 사용만 강제하는 방식으로 컴파일러가 동작
 */
 unsafe impl<#[may_dangle] T> Drop for Boks<T> {
     fn drop(&mut self) {
@@ -51,6 +50,15 @@ impl<T> std::ops::DerefMut for Boks<T> {
     }
 }
 
+use std::fmt::Debug;
+struct Oisann<T: Debug>(T);
+impl<T: Debug> Drop for Oisann<T> {
+    fn drop(&mut self) {
+        // access inner T, when drop
+        println!("{:?}", self.0)
+    }
+}
+
 fn main() {
     let x = 42;
     let b = Boks::ny(x);
@@ -66,5 +74,20 @@ fn main() {
     /*
        drop에서 T에 접근하지 않기 때문에, &mut의 lifetime을 줄일 수 있고
        그러면 &y에 대한 사용이 가능해진다
+    */
+
+    // --------------------------------  //
+    let mut z = 42;
+
+    let b = Boks::ny(Oisann(&mut z));
+    let b = Box::new(Oisann(&mut z));
+    println!("{:?}", z);
+    /*
+       이 코드는 컴파일이 되지만, 되면 안됨
+       Boks::drop은 inner value에 access 하지 안지만,
+       Oisann::drop은 inner value에 access
+            => 암묵적 drop에서 &mut z에 접근
+
+        but Box는 컴파일 불가(좋은 것)
     */
 }
