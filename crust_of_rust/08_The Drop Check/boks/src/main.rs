@@ -6,9 +6,18 @@
 #![feature(dropck_eyepatch)]
 
 use std::marker::PhantomData;
+use std::ptr::NonNull;
 
+/*
+    invariant in T(by *mut T)
+
+    can't treat Boks<&'static str> as Boks<&'a str>
+    but &'static str -> &'a str
+        Box<&'static str> -> Box<&'a str> can
+*/
 pub struct Boks<T> {
-    p: *mut T,
+    // p: *mut T,
+    p: NonNull<T>,
     _t: PhantomData<T>,
 }
 
@@ -26,14 +35,17 @@ pub struct Boks<T> {
 */
 unsafe impl<#[may_dangle] T> Drop for Boks<T> {
     fn drop(&mut self) {
-        unsafe { Box::from_raw(self.p) };
+        unsafe { Box::from_raw(self.p.as_mut()) };
+        // unsafe { Box::from_raw(self.p) };
     }
 }
 
 impl<T> Boks<T> {
     pub fn ny(t: T) -> Self {
         Boks {
-            p: Box::into_raw(Box::new(t)),
+            // p: Box::into_raw(Box::new(t)),
+            // box never create null pointer
+            p: unsafe { NonNull::new_unchecked(Box::into_raw(Box::new(t))) },
             _t: PhantomData,
         }
     }
@@ -48,7 +60,8 @@ impl<T> std::ops::Deref for Boks<T> {
            through Box which creates algined pointers, and hasn't been freed since
            self is alive
         */
-        unsafe { &*self.p }
+        // unsafe { &*self.p }
+        unsafe { &*self.p.as_ref() }
     }
 }
 impl<T> std::ops::DerefMut for Boks<T> {
@@ -57,7 +70,8 @@ impl<T> std::ops::DerefMut for Boks<T> {
            Safety
            same as above + we have &mut, no other reference has been givend out
         */
-        unsafe { &mut *self.p }
+        // unsafe { &mut *self.p }
+        unsafe { &mut *self.p.as_mut() }
     }
 }
 
@@ -71,34 +85,15 @@ impl<T: Debug> Drop for Oisann<T> {
 }
 
 fn main() {
-    let x = 42;
-    let b = Boks::ny(x);
-    println!("{:?}", *b);
-
-    // --------------------------------  //
-    let mut y = 42;
-
-    // Boks not work, Box work
-    let b = Boks::ny(&mut y);
-    // let b = Box::new(&mut y);
-    println!("{:?}", y);
+    let s = String::from("hei");
     /*
-       drop에서 T에 접근하지 않기 때문에, &mut의 lifetime을 줄일 수 있고
-       그러면 &y에 대한 사용이 가능해진다
+       Box는 컴파일이 되고 -> covariant
+       Boks는 컴파일 안됨 -> Invariant
     */
+    // let mut boks1 = Boks::ny(&*s);
+    // let boks2: Boks<&'static str> = Boks::ny("heisann");
+    let mut boks1 = Box::new(&*s);
+    let boks2 = Box::new("heisann");
 
-    // --------------------------------  //
-    let mut z = 42;
-
-    let b = Boks::ny(Oisann(&mut z));
-    // let b = Box::new(Oisann(&mut z));
-    println!("{:?}", z);
-    /*
-       이 코드는 컴파일이 되지만, 되면 안됨
-       Boks::drop은 inner value에 access 하지 안지만,
-       Oisann::drop은 inner value에 access
-            => 암묵적 drop에서 &mut z에 접근
-
-        but Box는 컴파일 불가(좋은 것)
-    */
+    boks1 = boks2;
 }
