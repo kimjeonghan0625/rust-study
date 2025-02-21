@@ -1,6 +1,7 @@
 /*
     permanently unstable feature(stable 에서 안돌아감)
         - rustup override set nightly
+        - rustup default stable
     drop check의 메커니즘을 파악 중
 */
 #![feature(dropck_eyepatch)]
@@ -18,7 +19,12 @@ use std::ptr::NonNull;
 pub struct Boks<T> {
     // p: *mut T,
     p: NonNull<T>,
-    _t: PhantomData<T>,
+    /*
+       PhatomData<T>는 T를 소유하고, covariant  -> T를 소유하기 때문에, T에 대한 drop check를 진행
+       fn()->T는 T를 소유하지 않고, covariant    -> T를 소유하지 않기 때문에, 컴파일러가 T에 대해 drop check를 하지않음
+    */
+    // _t: PhantomData<T>,
+    _t: PhantomData<fn() -> T>,
 }
 
 /*
@@ -84,7 +90,17 @@ impl<T: Debug> Drop for Oisann<T> {
     }
 }
 
+// use std::iter::Empty;
 fn main() {
+    /*
+       _t: PhantomData<fn() -> T>  가 되면 다음의 문제가 발생
+       Oissan이 drop을 할 때, &mut에 접근을 하는데, Boks는 컴파일됨
+    */
+    let mut z = 42;
+    let b = Boks::ny(Oisann(&mut z));
+    // let b = Box::new(Oisann(&mut z));
+    println!("{:?}", z);
+
     let s = String::from("hei");
     /*
        Box는 컴파일이 되고 -> covariant
