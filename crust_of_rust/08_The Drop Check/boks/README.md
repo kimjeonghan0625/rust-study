@@ -54,6 +54,20 @@
       use std::iter::Empty;
       // struct Empty<T>(marker::PhantomData<T>);
 
+      use std::marker;
+      // Empty struct at that time(using PhantomData<T>, currently PhantomData<fn()->T>)
+      struct Empty<T>(marker::PhantomData<T>);
+      impl<T> Iterator for Empty<T> {
+          type Item = T;
+
+          fn next(&mut self) -> Option<T> { None }
+      }
+      impl<T> Default for Empty<T> {
+          fn default() -> Empty<T> {
+              Empty(marker::PhantomData)
+          }
+      }
+
       let mut a = 42;
       let mut it: Empty<Oisann<&mut i32>> = Empty::default();
       let mut o: Option<Oisann<&mut i32>> = Some(Oisann(&mut a));
