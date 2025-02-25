@@ -5,14 +5,30 @@ fn main() {
     baz(bar::<u32>);
     baz(bar::<i32>);
     quox(&bar::<u32>);
+
+    let z = String::new();
+
+    let f = move || {
+        println!("{z}");
+        // drop(z);
+    };
+
+    quox(f);
 }
 
 fn bar<T>() {}
 
 fn baz(f: fn()) {}
 
-fn quox<F>(f: &F)
+fn quox<F>(mut f: F)
 where
-    F: Fn(),
+    F: FnOnce(),
 {
+}
+
+fn make_fn() -> impl FnOnce() {
+    let z = String::new();
+    move || {
+        println!("{z}");
+    }
 }
